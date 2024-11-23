@@ -1,4 +1,5 @@
 <?php
+ini_set('session.cookie_httponly', 1);
 session_start();
 include 'db_connect.php'; // Ajustar la ruta si es necesario
 

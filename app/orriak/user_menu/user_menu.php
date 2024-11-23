@@ -1,4 +1,5 @@
 <?php
+ini_set('session.cookie_httponly', 1);
 session_start();
 
 // Verificar si el usuario ha iniciado sesión

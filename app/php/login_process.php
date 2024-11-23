@@ -1,5 +1,6 @@
 <?php
-session_start(); // Asegúrate de iniciar la sesión primero
+ini_set('session.cookie_httponly', 1);
+session_start(); // Saioa hasi
 include 'db_connect.php'; // Incluir la conexión a la base de datos
 
 // Procesar el formulario de inicio de sesión
