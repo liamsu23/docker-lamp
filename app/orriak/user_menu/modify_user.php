@@ -35,7 +35,7 @@ $row = mysqli_fetch_assoc($result);
                 <img src="../../images/logo.png" alt="Logo Videoclub"> <!-- Logo del Videoclub -->
             </a>
         </div>
-        <h2>MErabiltzailea aldatu</h2>
+        <h2>Erabiltzailea aldatu</h2>
         <nav>
             <ul>
                 <li><a href="/php/logout.php">Saioa Itxi</a></li>
