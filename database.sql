@@ -106,6 +106,16 @@ CREATE TABLE login_attempts (
 
 COMMIT;
 
+CREATE TABLE login_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255),
+    ip_address VARCHAR(45),
+    login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('success', 'failed') -- Estado del inicio de sesión
+);
+
+COMMIT;
+
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

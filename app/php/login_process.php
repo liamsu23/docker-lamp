@@ -1,5 +1,5 @@
 <?php
-ini_set('session.cookie_httponly', 1);
+ini_set('session.cookie_httponly', 1); 
 session_start(); // Saioa hasi
 include 'db_connect.php'; // Incluir la conexión a la base de datos
 
@@ -37,8 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         Email: $email, IP: $ip_address" . PHP_EOL;
         file_put_contents("login_attempts.log", $log_message, FILE_APPEND);
         
-
-         // Mostrar mensaje de bloqueo
+        // Mostrar mensaje de bloqueo
         echo '<html><head>';
         echo '<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>';
         echo '</head><body>';
@@ -54,7 +53,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo '</body></html>';
         // Detener la ejecución del script
         exit;
-    
     }
 
     // Buscar el usuario por email
@@ -79,6 +77,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $_SESSION['user_id'] = $row['id_user'];
             $_SESSION['nombre'] = $row['izen_abizenak'];
 
+            // Registrar inicio de sesión exitoso en la base de datos
+            $sql_log_success = "INSERT INTO login_history (email, ip_address, status) 
+                                VALUES ('$email', '$ip_address', 'success')";
+            mysqli_query($conn, $sql_log_success);
+
             // Redirigir al menú de usuario o página principal
             echo "<script>
                     window.location = '../orriak/user_menu/user_menu.php';
@@ -87,6 +90,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Registrar intento fallido
             $sql_log_attempt = "INSERT INTO login_attempts (email, ip_address) VALUES ('$email', '$ip_address')";
             mysqli_query($conn, $sql_log_attempt);
+
+            // Registrar el fallo en el historial de login
+            $sql_log_failure = "INSERT INTO login_history (email, ip_address, status) 
+                                VALUES ('$email', '$ip_address', 'failed')";
+            mysqli_query($conn, $sql_log_failure);
 
             // Mostrar alerta de contraseña incorrecta
             echo "<script>
@@ -104,6 +112,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $sql_log_attempt = "INSERT INTO login_attempts (email, ip_address) VALUES ('$email', '$ip_address')";
         mysqli_query($conn, $sql_log_attempt);
 
+        // Registrar el fallo en el historial de login
+        $sql_log_failure = "INSERT INTO login_history (email, ip_address, status) 
+                            VALUES ('$email', '$ip_address', 'failed')";
+        mysqli_query($conn, $sql_log_failure);
+
         // Mostrar alerta de usuario no encontrado
         echo "<script>
                 Swal.fire({
@@ -120,4 +133,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 mysqli_close($conn);
+
 ?>

@@ -3,6 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Política de Seguridad de Contenido (CSP) -->
+	<meta http-equiv="Content-Security-Policy" content="
+	default-src 'self';
+	script-src 'self' https://code.jquery.com/ https://www.gstatic.com; 
+	style-src 'self';
+	img-src 'self' data:;
+	form-action 'self';
+	">
     <title>Bideokluba</title>
     <link rel="stylesheet" href="css/styles.css"> <!-- Enlazamos el archivo CSS -->
 </head>
