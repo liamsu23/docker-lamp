@@ -1,8 +1,8 @@
 <?php
 // Configuración de conexión a la base de datos
-$hostname = "db"; // Cambia según tu configuración
-$username = "admin";
-$password = "test";
+$hostname = "db"; 
+$username = "ISSKS";
+$password = "Bideoklub1234!";
 $db = "database";
 
 // Crear la conexión
