@@ -17,10 +17,10 @@ if (!$conn) {
 // Verificar si el formulario fue enviado
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Obtener y limpiar los datos enviados desde el formulario
-    $izenburua = mysqli_real_escape_string($conn, $_POST['izenburua']);
-    $zuzendaria = mysqli_real_escape_string($conn, $_POST['zuzendaria']);
-    $estrenaldi_urtea = mysqli_real_escape_string($conn, $_POST['estrenaldi_urtea']);
-    $generoa = mysqli_real_escape_string($conn, $_POST['generoa']);
+    $izenburua = $_POST['izenburua'];
+    $zuzendaria = $_POST['zuzendaria'];
+    $estrenaldi_urtea = $_POST['estrenaldi_urtea'];
+    $generoa = $_POST['generoa'];
 
     // Validar que los campos no estén vacíos
     if (empty($izenburua) || empty($zuzendaria) || empty($estrenaldi_urtea) || empty($generoa)) {
@@ -28,17 +28,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // Insertar los datos en la base de datos
+    // Preparar la consulta SQL para evitar inyección SQL
     $sql = "INSERT INTO pelikulak (izenburua, zuzendaria, estrenaldi_urtea, generoa) 
-            VALUES ('$izenburua', '$zuzendaria', '$estrenaldi_urtea', '$generoa')";
+            VALUES (?, ?, ?, ?)";
+    $stmt = mysqli_prepare($conn, $sql);
 
-    if (mysqli_query($conn, $sql)) {
-        // Obtener el ID de la última película insertada
-        $last_id = mysqli_insert_id($conn);
+    if ($stmt) {
+        // Enlazar los parámetros a la consulta preparada
+        mysqli_stmt_bind_param($stmt, "ssis", $izenburua, $zuzendaria, $estrenaldi_urtea, $generoa);
 
-        // Redirigir a la página de mostrar la película con el ID
-        header("Location: ../orriak/user_menu/show_item.php?item=$last_id");
-        exit(); // Asegúrate de hacer exit después de header
+        // Ejecutar la consulta
+        if (mysqli_stmt_execute($stmt)) {
+            // Obtener el ID de la última película insertada
+            $last_id = mysqli_insert_id($conn);
+
+            // Redirigir a la página de mostrar la película con el ID
+            header("Location: ../orriak/user_menu/show_item.php?item=$last_id");
+            exit(); // Asegúrate de hacer exit después de header
+        } else {
+            echo "Errorea pelikula gehitzerakoan: " . mysqli_stmt_error($stmt);
+        }
+
+        // Cerrar la declaración
+        mysqli_stmt_close($stmt);
     } else {
         echo "Errorea pelikula gehitzerakoan: " . mysqli_error($conn);
     }

@@ -21,15 +21,18 @@ $max_attempts = 5;         // Número máximo de intentos fallidos permitidos
 // Procesar el formulario de inicio de sesión
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Limpiar los datos de entrada para evitar inyecciones SQL
-    $email = mysqli_real_escape_string($conn, $_POST['email']);
-    $password = mysqli_real_escape_string($conn, $_POST['pasahitza']);
+    $email = $_POST['email'];
+    $password = $_POST['pasahitza'];
     $ip_address = $_SERVER['REMOTE_ADDR'];
 
     // Verificar intentos fallidos recientes
     $sql_attempts = "SELECT COUNT(*) AS failed_attempts 
                      FROM login_attempts 
-                     WHERE email='$email' AND attempt_time > NOW() - INTERVAL $time_limit";
-    $result_attempts = mysqli_query($conn, $sql_attempts);
+                     WHERE email=? AND attempt_time > NOW() - INTERVAL $time_limit";
+    $stmt = mysqli_prepare($conn, $sql_attempts);
+    mysqli_stmt_bind_param($stmt, "s", $email); // 's' indica que es un parámetro de tipo string
+    mysqli_stmt_execute($stmt);
+    $result_attempts = mysqli_stmt_get_result($stmt);
     $row_attempts = mysqli_fetch_assoc($result_attempts);
 
     if ($row_attempts['failed_attempts'] >= $max_attempts) {
@@ -55,9 +58,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit;
     }
 
-    // Buscar el usuario por email
-    $sql = "SELECT * FROM usuarios WHERE email='$email'";
-    $result = mysqli_query($conn, $sql);
+    // Buscar el usuario por email usando una consulta parametrizada
+    $sql = "SELECT * FROM usuarios WHERE email=?";
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "s", $email); // 's' indica que es un parámetro de tipo string
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
 
     // Estructura HTML mínima para que funcione el JavaScript
     echo '<html><head>';
@@ -70,8 +76,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Comparar la contraseña en texto plano con el hash almacenado
         if (password_verify($password, $row['pasahitza'])) {
             // Reiniciar intentos fallidos al inicio de sesión exitoso
-            $sql_reset_attempts = "DELETE FROM login_attempts WHERE email='$email'";
-            mysqli_query($conn, $sql_reset_attempts);
+            $sql_reset_attempts = "DELETE FROM login_attempts WHERE email=?";
+            $stmt_reset = mysqli_prepare($conn, $sql_reset_attempts);
+            mysqli_stmt_bind_param($stmt_reset, "s", $email); 
+            mysqli_stmt_execute($stmt_reset);
 
             // Iniciar sesión exitosa, guardar la sesión del usuario
             $_SESSION['user_id'] = $row['id_user'];
@@ -79,8 +87,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Registrar inicio de sesión exitoso en la base de datos
             $sql_log_success = "INSERT INTO login_history (email, ip_address, status) 
-                                VALUES ('$email', '$ip_address', 'success')";
-            mysqli_query($conn, $sql_log_success);
+                                VALUES (?, ?, 'success')";
+            $stmt_log_success = mysqli_prepare($conn, $sql_log_success);
+            mysqli_stmt_bind_param($stmt_log_success, "ss", $email, $ip_address);
+            mysqli_stmt_execute($stmt_log_success);
 
             // Redirigir al menú de usuario o página principal
             echo "<script>
@@ -88,13 +98,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                   </script>";
         } else {
             // Registrar intento fallido
-            $sql_log_attempt = "INSERT INTO login_attempts (email, ip_address) VALUES ('$email', '$ip_address')";
-            mysqli_query($conn, $sql_log_attempt);
+            $sql_log_attempt = "INSERT INTO login_attempts (email, ip_address) VALUES (?, ?)";
+            $stmt_log_attempt = mysqli_prepare($conn, $sql_log_attempt);
+            mysqli_stmt_bind_param($stmt_log_attempt, "ss", $email, $ip_address);
+            mysqli_stmt_execute($stmt_log_attempt);
 
             // Registrar el fallo en el historial de login
             $sql_log_failure = "INSERT INTO login_history (email, ip_address, status) 
-                                VALUES ('$email', '$ip_address', 'failed')";
-            mysqli_query($conn, $sql_log_failure);
+                                VALUES (?, ?, 'failed')";
+            $stmt_log_failure = mysqli_prepare($conn, $sql_log_failure);
+            mysqli_stmt_bind_param($stmt_log_failure, "ss", $email, $ip_address);
+            mysqli_stmt_execute($stmt_log_failure);
 
             // Mostrar alerta de contraseña incorrecta
             echo "<script>
@@ -109,13 +123,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     } else {
         // Registrar intento fallido para usuario inexistente
-        $sql_log_attempt = "INSERT INTO login_attempts (email, ip_address) VALUES ('$email', '$ip_address')";
-        mysqli_query($conn, $sql_log_attempt);
+        $sql_log_attempt = "INSERT INTO login_attempts (email, ip_address) VALUES (?, ?)";
+        $stmt_log_attempt = mysqli_prepare($conn, $sql_log_attempt);
+        mysqli_stmt_bind_param($stmt_log_attempt, "ss", $email, $ip_address);
+        mysqli_stmt_execute($stmt_log_attempt);
 
         // Registrar el fallo en el historial de login
         $sql_log_failure = "INSERT INTO login_history (email, ip_address, status) 
-                            VALUES ('$email', '$ip_address', 'failed')";
-        mysqli_query($conn, $sql_log_failure);
+                            VALUES (?, ?, 'failed')";
+        $stmt_log_failure = mysqli_prepare($conn, $sql_log_failure);
+        mysqli_stmt_bind_param($stmt_log_failure, "ss", $email, $ip_address);
+        mysqli_stmt_execute($stmt_log_failure);
 
         // Mostrar alerta de usuario no encontrado
         echo "<script>
@@ -133,5 +151,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 mysqli_close($conn);
-
 ?>

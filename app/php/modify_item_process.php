@@ -20,10 +20,10 @@ echo '</head><body>';
 // Verificar si se recibió el formulario por POST
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Obtener los datos del formulario
-    $titulo = mysqli_real_escape_string($conn, $_POST['izenburua']);
-    $director = mysqli_real_escape_string($conn, $_POST['zuzendaria']);
-    $anio = mysqli_real_escape_string($conn, $_POST['estrenaldi_urtea']);
-    $genero = mysqli_real_escape_string($conn, $_POST['generoa']);
+    $titulo = $_POST['izenburua'];
+    $director = $_POST['zuzendaria'];
+    $anio = $_POST['estrenaldi_urtea'];
+    $genero = $_POST['generoa'];
 
     // Validar los datos (opcional, pero recomendable)
     if (empty($titulo) || empty($director) || empty($anio) || empty($genero)) {
@@ -39,27 +39,47 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // Actualizar la película en la base de datos
+    // Preparar la consulta para actualizar la película
     $sql = "UPDATE pelikulak 
-            SET izenburua='$titulo', zuzendaria='$director', estrenaldi_urtea='$anio', generoa='$genero' 
-            WHERE id='$item_id'";
+            SET izenburua=?, zuzendaria=?, estrenaldi_urtea=?, generoa=? 
+            WHERE id=?";
 
-    if (mysqli_query($conn, $sql)) {
-        echo "<script>
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Arrakasta',
-                    text: 'Pelikula arrakastaz aldatua.',
-                }).then(function() {
-                    window.location.href = '../orriak/user_menu/show_item.php?item=$item_id'; // Redirigir después de cerrar el pop-up
-                });
-              </script>";
+    // Preparar la sentencia
+    if ($stmt = mysqli_prepare($conn, $sql)) {
+        // Vincular los parámetros
+        mysqli_stmt_bind_param($stmt, "ssssi", $titulo, $director, $anio, $genero, $item_id);
+
+        // Ejecutar la consulta
+        if (mysqli_stmt_execute($stmt)) {
+            echo "<script>
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Arrakasta',
+                        text: 'Pelikula arrakastaz aldatua.',
+                    }).then(function() {
+                        window.location.href = '../orriak/user_menu/show_item.php?item=$item_id'; // Redirigir después de cerrar el pop-up
+                    });
+                  </script>";
+        } else {
+            echo "<script>
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Errorea pelikula aldatzean.'
+                    }).then(function() {
+                        window.history.back(); // Regresar a la página anterior
+                    });
+                  </script>";
+        }
+
+        // Cerrar la sentencia
+        mysqli_stmt_close($stmt);
     } else {
         echo "<script>
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'Errorea pelikula aldatzean: " . mysqli_error($conn) . "'
+                    text: 'Errorea en la preparación de la consulta.'
                 }).then(function() {
                     window.history.back(); // Regresar a la página anterior
                 });

@@ -9,11 +9,23 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Ejecutar la consulta para obtener todas las películas
-$query = mysqli_query($conn, "SELECT * FROM pelikulak");
+// Preparar la consulta para obtener todas las películas
+$sql = "SELECT * FROM pelikulak";
+$stmt = mysqli_prepare($conn, $sql);
 
-if (!$query) {
-    echo "Error al ejecutar la consulta: " . mysqli_error($conn);
+if ($stmt) {
+    // Ejecutar la consulta preparada
+    mysqli_stmt_execute($stmt);
+
+    // Obtener los resultados
+    $result = mysqli_stmt_get_result($stmt);
+
+    if (!$result) {
+        echo "Error al obtener los datos: " . mysqli_stmt_error($stmt);
+        exit();
+    }
+} else {
+    echo "Error al preparar la consulta: " . mysqli_error($conn);
     exit();
 }
 ?>
@@ -57,7 +69,7 @@ if (!$query) {
                     <tbody>
                         <?php
                         // Mostrar cada película
-                        while ($row = mysqli_fetch_array($query)) {
+                        while ($row = mysqli_fetch_array($result)) {
                             echo "<tr>";
                             echo "<td>{$row['id']}</td>"; // Mostrar el ID de la película
                             echo "<td><a href='show_item.php?item={$row['id']}'>{$row['izenburua']}</a></td>";

@@ -10,8 +10,38 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $item_id = $_GET['item'];
-$query = mysqli_query($conn, "SELECT * FROM pelikulak WHERE id = '$item_id'");
-$item = mysqli_fetch_array($query);
+
+// Preparar la consulta parametrizada para obtener la película
+$sql = "SELECT * FROM pelikulak WHERE id = ?";
+$stmt = mysqli_prepare($conn, $sql);
+
+if ($stmt) {
+    // Vincular el parámetro
+    mysqli_stmt_bind_param($stmt, "i", $item_id);
+    
+    // Ejecutar la consulta
+    mysqli_stmt_execute($stmt);
+    
+    // Obtener el resultado
+    $result = mysqli_stmt_get_result($stmt);
+    
+    // Verificar si se encontró la película
+    if ($result && mysqli_num_rows($result) > 0) {
+        $item = mysqli_fetch_assoc($result);
+    } else {
+        echo "Película no encontrada.";
+        exit();
+    }
+
+    // Cerrar el statement
+    mysqli_stmt_close($stmt);
+} else {
+    echo "Error al preparar la consulta: " . mysqli_error($conn);
+    exit();
+}
+
+// Cerrar la conexión
+mysqli_close($conn);
 ?>
 
 <!DOCTYPE html>
@@ -45,10 +75,10 @@ $item = mysqli_fetch_array($query);
     <div class="hero">
         <main>
             <div class="movie-info">
-                <h1><?php echo $item['izenburua']; ?></h>
-                <p>Zuzendaria: <?php echo $item['zuzendaria']; ?></p>
-                <p>Estrenaldi Urtea: <?php echo $item['estrenaldi_urtea']; ?></p>
-                <p>Generoa: <?php echo $item['generoa']; ?></p>
+                <h1><?php echo htmlspecialchars($item['izenburua']); ?></h1>
+                <p>Zuzendaria: <?php echo htmlspecialchars($item['zuzendaria']); ?></p>
+                <p>Estrenaldi Urtea: <?php echo htmlspecialchars($item['estrenaldi_urtea']); ?></p>
+                <p>Generoa: <?php echo htmlspecialchars($item['generoa']); ?></p>
             </div>
             
             <div class="button-container">
@@ -58,7 +88,6 @@ $item = mysqli_fetch_array($query);
                     <button type="submit" id="item_delete_submit" class="btn">Ezabatu</button>
                 </form>
             </div>
-            
         </main>
     </div>
     

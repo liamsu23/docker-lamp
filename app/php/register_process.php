@@ -32,12 +32,12 @@ function validarPassword($password) {
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Limpiar y escapar los datos del formulario
-    $dni = mysqli_real_escape_string($conn, $_POST['DNI']);
-    $nombre = mysqli_real_escape_string($conn, $_POST['nombre']);
-    $telefono = mysqli_real_escape_string($conn, $_POST['telefonoa']);
-    $fecha_nacimiento = mysqli_real_escape_string($conn, $_POST['jaiotze_data']);
-    $email = mysqli_real_escape_string($conn, $_POST['email']);
-    $password = mysqli_real_escape_string($conn, $_POST['pasahitza']);
+    $dni = $_POST['DNI'];
+    $nombre = $_POST['nombre'];
+    $telefono = $_POST['telefonoa'];
+    $fecha_nacimiento = $_POST['jaiotze_data'];
+    $email = $_POST['email'];
+    $password = $_POST['pasahitza'];
 
     // Estructura HTML mínima para que funcione el JavaScript
     echo '<html><head>';
@@ -122,46 +122,55 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // **Generar el hash de la contraseña con salt**
     $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
-    // Intentar insertar los datos en la base de datos
+    // **Preparar la consulta SQL usando consultas parametrizadas**
     $sql = "INSERT INTO usuarios (DNI, izen_abizenak, telefonoa, jaiotze_data, email, pasahitza) 
-            VALUES ('$dni', '$nombre', '$telefono', '$fecha_nacimiento', '$email', '$password_hash')";
+            VALUES (?, ?, ?, ?, ?, ?)";
 
-    if (mysqli_query($conn, $sql)) {
-        echo "<script>
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Erregistro arrakastatsua',
-                    text: 'Ondo erregistratu zara!',
-                    confirmButtonText: 'Saioa hasi'
-                }).then(function() {
-                        window.location = '../orriak/login.php'; 
-                });
-              </script>";
-    } else {
-        // Verificar si el error es por duplicación del DNI (error 1062)
-        if (mysqli_errno($conn) == 1062) {
+    if ($stmt = mysqli_prepare($conn, $sql)) {
+        // Vincular los parámetros
+        mysqli_stmt_bind_param($stmt, "ssssss", $dni, $nombre, $telefono, $fecha_nacimiento, $email, $password_hash);
+
+        // Ejecutar la consulta
+        if (mysqli_stmt_execute($stmt)) {
             echo "<script>
                     Swal.fire({
-                        icon: 'error',
-                        title: 'Erregistro-errorea',
-                        text: 'NAN-a: \"$dni\" erregistratuta dago.',
-                        confirmButtonText: 'Berriro saiatu'
+                        icon: 'success',
+                        title: 'Erregistro arrakastatsua',
+                        text: 'Ondo erregistratu zara!',
+                        confirmButtonText: 'Saioa hasi'
                     }).then(function() {
-                        window.location = '../orriak/register.php'; 
+                            window.location = '../orriak/login.php'; 
                     });
                   </script>";
         } else {
-            echo "<script>
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Datu-basearen errorea',
-                        text: '" . mysqli_error($conn) . "',
-                        confirmButtonText: 'Barriro saiatu'
-                    }).then(function() {
-                        window.location = '../orriak/register.php'; 
-                    });
-                  </script>";
+            // Verificar si el error es por duplicación del DNI (error 1062)
+            if (mysqli_errno($conn) == 1062) {
+                echo "<script>
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Erregistro-errorea',
+                            text: 'NAN-a: \"$dni\" erregistratuta dago.',
+                            confirmButtonText: 'Berriro saiatu'
+                        }).then(function() {
+                            window.location = '../orriak/register.php'; 
+                        });
+                      </script>";
+            } else {
+                echo "<script>
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Datu-basearen errorea',
+                            text: '" . mysqli_error($conn) . "',
+                            confirmButtonText: 'Barriro saiatu'
+                        }).then(function() {
+                            window.location = '../orriak/register.php'; 
+                        });
+                      </script>";
+            }
         }
+
+        // Cerrar la sentencia
+        mysqli_stmt_close($stmt);
     }
 
     echo '</body></html>';
