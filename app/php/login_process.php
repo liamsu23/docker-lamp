@@ -67,8 +67,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (mysqli_num_rows($result) > 0) {
         $row = mysqli_fetch_assoc($result);
         
-        // Comparar la contraseña en texto plano
-        if ($password === $row['pasahitza']) {
+        // Comparar la contraseña en texto plano con el hash almacenado
+        if (password_verify($password, $row['pasahitza'])) {
             // Reiniciar intentos fallidos al inicio de sesión exitoso
             $sql_reset_attempts = "DELETE FROM login_attempts WHERE email='$email'";
             mysqli_query($conn, $sql_reset_attempts);

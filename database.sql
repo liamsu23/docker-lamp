@@ -40,18 +40,6 @@ CREATE TABLE `usuarios` (
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-
---
--- Volcado de datos para la tabla `usuarios`
---
-
-INSERT INTO `usuarios` (`id_user`, `DNI`, `izen_abizenak`, `telefonoa`, `jaiotze_data`, `email`, `pasahitza`) VALUES
-(1, '12345678-A', 'Proba Bat', 600123456, '1990-05-15', 'proba.bat@example.com', 'password123'),
-(2, '87654321-B', 'Proba Bi ', 610987654, '1988-09-22', 'proba.2@example.com', 'securePass456'),
-(3, '56781234-C', 'Lamine Yamal', 620654321, '1992-12-10', 'lamine.FCB@example.com', 'pass789xyz'),
-(4, '43218765-D', 'Pepe Palotes', 630321987, '1995-03-05', 'pepe1234@example.com', 'pepe1234'),
-(5, '34567812-E', 'Miguel Torres', 640789123, '1991-07-30', 'MykeTowers.23@example.com', 'EasyMoneyBaby23');
-
 COMMIT;
 
 -- --------------------------------------------------------
